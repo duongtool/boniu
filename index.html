@@ -264,6 +264,30 @@ canvas { display: block; width: 100%; height: 100%; }
     font-size: 1rem; color: #c25070; letter-spacing: 0.15em;
 }
 
+.letter-msg-btn {
+    display: inline-block; margin-top: 16px;
+    padding: 11px 28px;
+    background: linear-gradient(135deg, #ff69b4, #e0406e);
+    color: #fff; font-family: "PacificoLocal","Pacifico",cursive;
+    font-size: 0.95rem; letter-spacing: 0.5px;
+    border-radius: 50px; text-decoration: none;
+    box-shadow: 0 4px 18px rgba(255,105,180,0.45);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
+    opacity: 0; animation: none;
+}
+.letter-msg-btn.visible {
+    animation: btnPopIn 0.5s cubic-bezier(0.22,1,0.36,1) 0.25s forwards;
+}
+.letter-msg-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 24px rgba(255,105,180,0.6);
+}
+.letter-msg-btn:active { transform: scale(0.97); }
+@keyframes btnPopIn {
+    from { opacity:0; transform: translateY(10px) scale(0.9); }
+    to   { opacity:1; transform: translateY(0)    scale(1);   }
+}
+
 .letter-footer {
     display: flex; align-items: center; justify-content: space-between;
     padding: 9px 18px 11px;
@@ -325,10 +349,12 @@ canvas { display: block; width: 100%; height: 100%; }
             <div class="letter-content"></div>
             <div class="letter-image-wrap" id="letterImageWrap" style="display:none">
                 <img class="letter-inline-image" id="letterInlineImage" src="" alt="">
-                <span class="letter-image-caption">♥</span>
+                <span class="letter-image-caption" id="letterCaption">♥</span>
+                <a id="letterMsgBtn" href="https://m.me/trduongdz209" target="_blank" rel="noopener" class="letter-msg-btn">
+                    💬 Nhắn Dương nào!
+                </a>
             </div>
         </div>
-
 
         <div class="letter-footer">
             <span class="letter-signature">🎈 Happy 1/6 — Bon mãi là đứa trẻ đáng yêu nhất! 🎈</span>
@@ -346,7 +372,7 @@ window.APP_CONFIG = {
     particleImage: 'image/anh1.jpg',
     sphereImages:  ['image/anh1.jpg', 'image/anh2.jpg', 'image/anh3.jpg', 'image/anh4.jpg', 'image/anh5.jpg', 'image/anh6.jpg',],
     letter: {
-        text:    "🎈 Chúc Mừng 1/6, Bon iu!\n\nGửi Bon — Nguyễn Trúc Linh,\n\nDù lớn đến đâu, Bon vẫn mãi là cô bé có nụ cười làm sáng cả không gian xung quanh.\n\nNgày 1/6 này, mình chỉ muốn nhắn một điều:\nĐừng để phần trẻ con trong lòng Bon tắt đi nhé — cái cách Bon cười vô tư, yêu thương thật thà, háo hức với những điều nhỏ bé... đó là điều quý giá nhất Bon có.\n\n✨ Chúc Bon mãi giữ nụ cười rạng rỡ\n🌈 Mỗi ngày đều thấy cuộc đời đẹp và đáng yêu\n💛 Luôn được bao quanh bởi những người yêu thương Bon thật lòng\n\nHappy Children's Day! 🥳\n\n\nTác giả,\nT Q D\n\nLướt tiếp nào",
+        text:    "🎈 Chúc Mừng 1/6, Bon iu!\n\nGửi Bon — Nguyễn Trúc Linh,\n\nDù lớn đến đâu, Bon vẫn mãi là cô bé có nụ cười làm sáng cả không gian xung quanh.\n\nNgày 1/6 này, Dương chỉ muốn nhắn một điều:\nĐừng để phần trẻ con trong lòng Bon tắt đi nhé — cái cách Bon cười vô tư, yêu thương thật thà, háo hức với những điều nhỏ bé... đó là điều quý giá nhất Bon có.\n\n✨ Chúc Bon mãi giữ nụ cười rạng rỡ\n🌈 Mỗi ngày đều thấy cuộc đời đẹp và đáng yêu\n💛 Luôn được bao quanh bởi những người yêu thương Bon thật lòng\n\nHappy Children's Day! 🥳\n\n\nTác giả,\nT Q D",
         image:  'image/anh1.jpg',
         caption: 'Đọc đến đây rồi thì biết phải nhắn gì và cư xử với ngta sao ròi đấy 😉 '
     },
@@ -444,7 +470,6 @@ function generateFromImage(img, count, size) {
     return {positions:points,colors};
 }
 
-/* ── Text → particles ── */
 function generateFromText(text,count,size){
     if(!text||!text.trim())return null;
     const w=800,maxLW=680,fontSize=140,lineHeight=170;
@@ -724,7 +749,6 @@ function triggerExplosion(){
     }
 }
 
-/* ── Animate loop ── */
 function animate(){
     requestAnimationFrame(animate);if(!isInitialized)return;
     const elapsedTime=clock.getElapsedTime(),deltaTime=clock.getDelta();
@@ -981,44 +1005,64 @@ function updateCupidFly(){
     }
 }
 
-function showLetterFinished(letterContent,cursor){
-    if(cursor)cursor.style.display='none';
+function showLetterFinished(letterContent, cursor){
+    if(cursor) cursor.style.display='none';
     letterContent.classList.add('typing-complete');
-    const letterImageUrl=(cfg.letter&&cfg.letter.image&&String(cfg.letter.image).trim())?cfg.letter.image:'';
-    const captionText=(cfg.letter&&cfg.letter.caption!=null)?String(cfg.letter.caption).trim():'';
-    const wrap=document.getElementById('letterImageWrap'),imgEl=document.getElementById('letterInlineImage');
-    const captionEl=wrap?.querySelector('.letter-image-caption');
+
+    const letterImageUrl = (cfg.letter && cfg.letter.image && String(cfg.letter.image).trim()) ? cfg.letter.image : '';
+    const captionText    = (cfg.letter && cfg.letter.caption != null) ? String(cfg.letter.caption).trim() : '';
+    const wrap    = document.getElementById('letterImageWrap');
+    const imgEl   = document.getElementById('letterInlineImage');
+    const captionEl = document.getElementById('letterCaption');
+
     if(wrap){
-        if(letterImageUrl&&imgEl){imgEl.src=letterImageUrl;imgEl.style.display='block';}
-        else if(imgEl){imgEl.style.display='none';}
-        if(captionEl){captionEl.textContent=captionText||'';captionEl.style.display=captionText?'block':'none';}
-        if(letterImageUrl||captionText){
-            wrap.style.display='block';wrap.classList.remove('visible');
-            requestAnimationFrame(()=>wrap.classList.add('visible'));
+        if(letterImageUrl && imgEl){ imgEl.src = letterImageUrl; imgEl.style.display = 'block'; }
+        else if(imgEl){ imgEl.style.display = 'none'; }
+
+        if(captionEl){
+            captionEl.textContent = captionText || '';
+            captionEl.style.display = captionText ? 'block' : 'none';
+        }
+
+        if(letterImageUrl || captionText){
+            wrap.style.display = 'block';
+            wrap.classList.remove('visible');
+            requestAnimationFrame(()=>{
+                wrap.classList.add('visible');                
+                setTimeout(()=>{
+                    const msgBtn = document.getElementById('letterMsgBtn');
+                    if(msgBtn) msgBtn.classList.add('visible');
+                    const letterBody = wrap.closest('.letter-body');
+                    if(letterBody){
+                        letterBody.scrollTo({ top: letterBody.scrollHeight, behavior: 'smooth' });
+                    }
+                }, 520);
+            });
         }
     }
 }
 
-function startLetterTypingEffect(letterContent,cursor){
-    const text=CUPID_LETTER_TEXT;
-    const TYPING_SPEED_MS=28,NEWLINE_DELAY_MS=180;
-    const chars=Array.from(text);
-    let currentIndex=0,timerId=null;
+function startLetterTypingEffect(letterContent, cursor){
+    const text = CUPID_LETTER_TEXT;
+    const TYPING_SPEED_MS = 28, NEWLINE_DELAY_MS = 180;
+    const chars = Array.from(text);
+    let currentIndex = 0;
 
     function typeNextChar(){
-        if(currentIndex<chars.length){
-            const char=chars[currentIndex];
-            letterContent.insertBefore(document.createTextNode(char),cursor);
+        if(currentIndex < chars.length){
+            const char = chars[currentIndex];
+            letterContent.insertBefore(document.createTextNode(char), cursor);
             currentIndex++;
-            if(char==='\n'||currentIndex%60===0){
-                letterContent.parentElement.scrollTop=letterContent.parentElement.scrollHeight;
-            }
-            timerId=setTimeout(typeNextChar,char==='\n'?NEWLINE_DELAY_MS:TYPING_SPEED_MS);
-        }else{
-            timerId=setTimeout(()=>showLetterFinished(letterContent,cursor),400);
+          
+            const body = letterContent.parentElement;
+            if(body) body.scrollTop = body.scrollHeight;
+
+            setTimeout(typeNextChar, char === '\n' ? NEWLINE_DELAY_MS : TYPING_SPEED_MS);
+        } else {
+            setTimeout(()=> showLetterFinished(letterContent, cursor), 400);
         }
     }
-    timerId=setTimeout(typeNextChar,400);
+    setTimeout(typeNextChar, 400);
 }
 
 function handleLetterEnvelopeClick(){
@@ -1029,8 +1073,9 @@ function handleLetterEnvelopeClick(){
     const letterFrame=document.getElementById('cupid-letter-frame');
     const letterContent=letterFrame?.querySelector('.letter-content');
     const wrap=document.getElementById('letterImageWrap'),imgEl=document.getElementById('letterInlineImage');
-    if(wrap&&imgEl){wrap.style.display='none';wrap.classList.remove('visible');imgEl.src='';}
-    if(letterFrame&&letterContent){
+    if(wrap&&imgEl){wrap.style.display='none';wrap.classList.remove('visible');imgEl.src='';
+        const msgBtn=document.getElementById('letterMsgBtn');if(msgBtn)msgBtn.classList.remove('visible');
+    }    if(letterFrame&&letterContent){
         letterContent.textContent='';letterContent.classList.remove('typing-complete');
         const cursor=document.createElement('span');cursor.className='letter-cursor';letterContent.appendChild(cursor);
         const fontReady=document.fonts.load('1em "Cormorant Garamond"').catch(()=>{});
@@ -1075,7 +1120,6 @@ async function startSpherePhase(){
     spClickSphere.renderOrder=-1;scene.add(spClickSphere);
     spRaycaster=new THREE.Raycaster();spMouse=new THREE.Vector2();
 
-    /* Ambient sphere particles */
     const sCnt=600,sPos=new Float32Array(sCnt*3),sCol=new Float32Array(sCnt*3);
     for(let i=0;i<sCnt;i++){
         const t2=Math.random()*Math.PI*2,p2=Math.acos(2*Math.random()-1),r2=SP_RADIUS*1.2+Math.random()*3;
@@ -1088,7 +1132,6 @@ async function startSpherePhase(){
     spParticlesMesh=new THREE.Points(sGeo,new THREE.PointsMaterial({size:0.04,vertexColors:true,transparent:true,opacity:0.8}));
     scene.add(spParticlesMesh);
 
-    /* Rain particles */
     const rPos=new Float32Array(SP_RAIN_COUNT*3),rCol=new Float32Array(SP_RAIN_COUNT*3);
     for(let i=0;i<SP_RAIN_COUNT;i++){
         rPos[i*3]=(Math.random()-.5)*2*SP_FLYOUT_BOUND;rPos[i*3+1]=-SP_FLYOUT_BOUND+Math.random()*2*SP_FLYOUT_BOUND;rPos[i*3+2]=(Math.random()-.5)*2*SP_FLYOUT_BOUND;
@@ -1101,7 +1144,6 @@ async function startSpherePhase(){
     spRainMesh=new THREE.Points(rGeo,new THREE.PointsMaterial({size:0.035,vertexColors:true,transparent:true,opacity:0.75}));
     spRainMesh.renderOrder=998;scene.add(spRainMesh);
 
-    /* CSS particles bg */
     const bg=document.getElementById('sphere-particles-bg');
     for(let i=0;i<30;i++){
         const d=document.createElement('div');d.className='sp-particle';
@@ -1112,7 +1154,6 @@ async function startSpherePhase(){
     }
     bg.style.opacity='1';
 
-    /* Load textures */
     const loader=new THREE.TextureLoader();loader.crossOrigin='anonymous';
     Promise.all(SPHERE_IMAGES.map(url=>new Promise(res=>loader.load(url,res,undefined,()=>res(null))))).then(textures=>{
         spTextures=[];spSphereImageUrls=[];
